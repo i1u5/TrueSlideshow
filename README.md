@@ -1,4 +1,4 @@
 # TrueSlideshow
 
-## Requirements
-Windows 10 or higher
+## Usage
+`deno run --allow-read --allow-run index.ts "%USERPROFILE%\Pictures"`
