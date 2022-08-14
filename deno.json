@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "alwaysStrict": true
+    },
+    "fmt": {
+        "options": {
+            "useTabs": false,
+            "indentWidth": 4
+        }
+    }
+}
