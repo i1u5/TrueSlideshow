@@ -76,7 +76,7 @@ const main = async () => {
 
             i = 0;
         }
-    }, 30 * 60 * 1000); // 30 seconds
+    }, 1 * 60 * 1000); // 1 min
 };
 
 function getImages(path: string): string[] {
@@ -125,10 +125,7 @@ async function setWallpaper(fileName: string) {
     if (!await exists(file)) return 1;
 
     const process = Deno.run({
-        cmd: [
-            resolve(Deno.cwd() + "\\" + "wallpaper.exe"),
-            file,
-        ],
+        cmd: [binaryWp, file],
     });
 
     return (await process.status()).code;
