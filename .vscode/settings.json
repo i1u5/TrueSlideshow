@@ -7,7 +7,5 @@
     "editor.insertSpaces": true,
     "editor.tabSize": 4,
     "editor.detectIndentation": false,
-    "[html]": {
-        "editor.defaultFormatter": "vscode.html-language-features"
-    }
+    "editor.wordWrap": "off"
 }
