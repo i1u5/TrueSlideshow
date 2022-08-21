@@ -19,29 +19,17 @@ const supportedExtensions = [
 enum USER32 {
     SPI_GETDESKWALLPAPER = 0x0073,
     SPI_SETDESKWALLPAPER = 0x0014,
+
+    SPIF_UPDATEINIFILE = 0x0001,
+    SPIF_SENDCHANGE = 0x0002,
 }
 
 let queue: string[] = [];
 
-// https://github.com/denoland/deno_std/pull/1364
-const exists = async (filename: string) => {
-    try {
-        await Deno.stat(filename);
-        return true;
-    } catch {
-        return false;
-    }
-};
+// FFI related
 
-const u32 = Deno.dlopen("user32.dll", {
-    SystemParametersInfoW: {
-        parameters: ["u64", "u64", "pointer", "u64"],
-        result: "pointer",
-    },
-});
-
-function getBufferPointer(param: string) {
-    const buffer = new ArrayBuffer((param.length + 1) * 2);
+function getBufferPointer(param: string, len: number) {
+    const buffer = new ArrayBuffer(len);
     const u16 = new Uint16Array(buffer);
 
     for (let index = 0; index < u16.length; index++) {
@@ -51,7 +39,7 @@ function getBufferPointer(param: string) {
     return Deno.UnsafePointer.of(u16);
 }
 
-function getCString(pointer: bigint) {
+/*function getCString(pointer: bigint) {
     const view = new Deno.UnsafePointerView(pointer);
     let x = 0;
     const arr = [];
@@ -64,7 +52,88 @@ function getCString(pointer: bigint) {
         x += 2;
     }
     return arr.join("");
+}*/
+
+async function setWallpaper(fileName: string) {
+    const file = resolve(providedPath + "\\" + fileName);
+
+    if (!await exists(file)) return false;
+
+    const u32 = Deno.dlopen("user32.dll", {
+        SystemParametersInfoW: {
+            parameters: ["u64", "u64", "pointer", "u64"],
+            result: "pointer",
+        },
+    });
+
+    const len = (file.length + 1) * 2;
+    const pointer = getBufferPointer(file, len);
+
+    if (u32.symbols.SystemParametersInfoW(USER32.SPI_SETDESKWALLPAPER, len, pointer, USER32.SPIF_UPDATEINIFILE | USER32.SPIF_SENDCHANGE) === 0n) {
+        u32.close();
+        return false;
+    }
+
+    u32.close();
+    console.log(`>> ${fileName}`);
+
+    return true;
 }
+
+// FS related
+
+// https://github.com/denoland/deno_std/pull/1364
+async function exists(filename: string) {
+    try {
+        await Deno.stat(filename);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function getImages(path: string): string[] {
+    const arr = [];
+
+    for (const dirEntry of Deno.readDirSync(path)) {
+        if (!dirEntry.isFile) continue;
+        const fileName = dirEntry.name.toLowerCase();
+        if (supportedExtensions.find((elm) => fileName.endsWith(elm))) { //TODO: recursive tracking
+            arr.push(dirEntry.name);
+        }
+    }
+
+    return arr;
+}
+
+/*
+TODO: watch folder for removed/added files
+
+function watchFolder(path): void {
+}*/
+
+// Array manipulation
+
+// Fisher Yates algorithm
+function shuffle(arr: string[]) {
+    let i = arr.length, r;
+    while (i != 0) {
+        r = Math.floor(Math.random() * i);
+        i--;
+        [arr[i], arr[r]] = [arr[r], arr[i]];
+    }
+    return arr;
+}
+
+// Swap 1st array element w/ the second
+function swap(arr: string[]) {
+    const secondElm = arr[1];
+    arr[1] = arr[0];
+    arr[0] = secondElm;
+    return arr;
+}
+
+// Runtime
 
 const main = async () => {
     if (!providedPath || !(await exists(providedPath))) {
@@ -91,7 +160,7 @@ const main = async () => {
     let i = 0; // current file index
     console.log("\nStarting loop\n");
 
-    immediateInterval(async () => {
+    (async function loop() {
         if (queue[i]) await setWallpaper(queue[i]);
 
         i++;
@@ -109,55 +178,10 @@ const main = async () => {
 
             i = 0;
         }
-    }, 10000); // 10 seconds
+
+        setTimeout(loop, 1000);
+    })(); // 10 seconds
 };
-
-function getImages(path: string): string[] {
-    const arr = [];
-
-    for (const dirEntry of Deno.readDirSync(path)) {
-        if (!dirEntry.isFile) continue;
-        const fileName = dirEntry.name.toLowerCase();
-        if (supportedExtensions.find((elm) => fileName.endsWith(elm))) { //TODO: recursive tracking
-            arr.push(dirEntry.name);
-        }
-    }
-
-    return arr;
-}
-
-// Fisher Yates algorithm
-function shuffle(arr: string[]) {
-    let i = arr.length, r;
-    while (i != 0) {
-        r = Math.floor(Math.random() * i);
-        i--;
-        [arr[i], arr[r]] = [arr[r], arr[i]];
-    }
-    return arr;
-}
-
-function swap(arr: string[]) {
-    const secondElm = arr[1];
-    arr[1] = arr[0];
-    arr[0] = secondElm;
-    return arr;
-}
-
-function immediateInterval(f: (...args: unknown[]) => void, interval: number | undefined) {
-    f();
-    return setTimeout(f, interval);
-}
-
-async function setWallpaper(fileName: string) {
-
-}
-
-/*
-TODO: watch folder for removed/added files
-
-function watchFolder(path): void {
-}*/
 
 // Instantly log and leave in case of a filesystem related error
 try {
