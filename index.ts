@@ -59,10 +59,6 @@ function getBufferPointer(param: string, len: number) {
 }*/
 
 async function setWallpaper(fileName: string) {
-    if(Deno.args[0] && Deno.args[1]) {
-
-    }
-
     const file = resolve(providedPath + "\\" + fileName);
 
     if (!await exists(file)) return false;
