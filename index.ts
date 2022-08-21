@@ -1,6 +1,9 @@
+// deno run -A --unstable ./index.ts 20 "X:/path-to-folder"
+
 import { resolve } from "https://deno.land/std@0.152.0/path/mod.ts";
 
-const providedPath = Deno.args[0] ? resolve(Deno.args[0]) : Deno.env.get("USERPROFILE") ? resolve(Deno.env.get("USERPROFILE") + "\\Pictures") : null;
+const providedInt = Deno.args[0] && Number.isInteger(Deno.args[0]) && parseInt(Deno.args[0], 10) > 0 ? parseInt(Deno.args[0], 10) : 5;
+const providedPath = Deno.args[1] ? resolve(Deno.args[1]) : Deno.env.get("USERPROFILE") ? resolve(Deno.env.get("USERPROFILE") + "\\Pictures") : null;
 
 const supportedExtensions = [
     ".jpg",
@@ -17,9 +20,10 @@ const supportedExtensions = [
 ];
 
 enum USER32 {
+    // SystemParametersInfoW as uiAction
     SPI_GETDESKWALLPAPER = 0x0073,
     SPI_SETDESKWALLPAPER = 0x0014,
-
+    // SystemParametersInfoW as fWinIni
     SPIF_UPDATEINIFILE = 0x0001,
     SPIF_SENDCHANGE = 0x0002,
 }
@@ -179,8 +183,8 @@ const main = async () => {
             i = 0;
         }
 
-        setTimeout(loop, 1000);
-    })(); // 10 seconds
+        setTimeout(loop, providedInt * 1000);
+    })();
 };
 
 // Instantly log and leave in case of a filesystem related error
