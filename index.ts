@@ -2,7 +2,7 @@
 
 import { resolve } from "https://deno.land/std@0.152.0/path/mod.ts";
 
-const providedInt = Deno.args[0] && Number.isInteger(Deno.args[0]) && parseInt(Deno.args[0], 10) > 0 ? parseInt(Deno.args[0], 10) : 5;
+const providedInt = Deno.args[0] && parseInt(Deno.args[0], 10) > 0 ? parseInt(Deno.args[0], 10) : 5;
 const providedPath = Deno.args[1] ? resolve(Deno.args[1]) : Deno.env.get("USERPROFILE") ? resolve(Deno.env.get("USERPROFILE") + "\\Pictures") : null;
 
 const supportedExtensions = [
@@ -59,6 +59,10 @@ function getBufferPointer(param: string, len: number) {
 }*/
 
 async function setWallpaper(fileName: string) {
+    if(Deno.args[0] && Deno.args[1]) {
+
+    }
+
     const file = resolve(providedPath + "\\" + fileName);
 
     if (!await exists(file)) return false;
