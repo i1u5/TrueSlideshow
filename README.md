@@ -1,9 +1,9 @@
 # TrueSlideshow
 
 ## Example 
-```./ts.exe 10 "C:/path/to/folder"```
+```.\ts.exe 10 "C:/path/to/folder"```
 
-The program requires two paramaters:
+Two optional paramaters may be provided:
 - The interval of slideshow in seconds, defaults to `5`
 - The path to the folder with images, if no directory was provided, then it will default to `%USERPROFILE%\Pictures`
 
