@@ -33,6 +33,39 @@ const exists = async (filename: string) => {
     }
 };
 
+const u32 = Deno.dlopen("user32.dll", {
+    SystemParametersInfoW: {
+        parameters: ["u64", "u64", "pointer", "u64"],
+        result: "pointer",
+    },
+});
+
+function getBufferPointer(param: string) {
+    const buffer = new ArrayBuffer((param.length + 1) * 2);
+    const u16 = new Uint16Array(buffer);
+
+    for (let index = 0; index < u16.length; index++) {
+        u16[index] = param.charCodeAt(index);
+    }
+
+    return Deno.UnsafePointer.of(u16);
+}
+
+function getCString(pointer: bigint) {
+    const view = new Deno.UnsafePointerView(pointer);
+    let x = 0;
+    const arr = [];
+    while (1) {
+        const u16 = view.getUint16(x);
+        if (u16 === 0) {
+            break;
+        }
+        arr.push(String.fromCharCode(u16));
+        x += 2;
+    }
+    return arr.join("");
+}
+
 const main = async () => {
     if (!providedPath || !(await exists(providedPath))) {
         console.log("Error, the provided directory seems to be invalid.");
