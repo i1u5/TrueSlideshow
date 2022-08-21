@@ -1,20 +1,26 @@
 import { resolve } from "https://deno.land/std@0.152.0/path/mod.ts";
 
-const binaryWp = resolve(Deno.cwd() + "\\" + "wallpaper.exe"),
-    providedPath = Deno.args[0] ? resolve(Deno.args[0]) : null,
-    supportedExtensions = [
-        ".jpg",
-        ".jpeg",
-        ".bmp",
-        ".dib",
-        ".png",
-        ".jfif",
-        ".jpe",
-        ".gif",
-        ".tif",
-        ".tiff",
-        ".wdp",
-    ];
+const providedPath = Deno.args[0] ? resolve(Deno.args[0]) : Deno.env.get("USERPROFILE") ? resolve(Deno.env.get("USERPROFILE") + "\\Pictures") : null;
+
+const supportedExtensions = [
+    ".jpg",
+    ".jpeg",
+    ".bmp",
+    ".dib",
+    ".png",
+    ".jfif",
+    ".jpe",
+    ".gif",
+    ".tif",
+    ".tiff",
+    ".wdp",
+];
+
+enum USER32 {
+    SPI_GETDESKWALLPAPER = 0x0073,
+    SPI_SETDESKWALLPAPER = 0x0014,
+}
+
 let queue: string[] = [];
 
 // https://github.com/denoland/deno_std/pull/1364
@@ -27,13 +33,6 @@ const exists = async (filename: string) => {
     }
 };
 
-// https://github.com/sindresorhus/win-wallpaper/releases/latest
-// TODO: compile w/ github actions
-if (!await exists(binaryWp)) {
-    console.log("Error, wallpaper-win binary not detected, exiting...");
-    Deno.exit(1);
-}
-
 const main = async () => {
     if (!providedPath || !(await exists(providedPath))) {
         console.log("Error, the provided directory seems to be invalid.");
@@ -44,19 +43,20 @@ const main = async () => {
 
     switch (images.length) {
         case 0:
-            console.log("No images detected, continuing to watch folder...");
+            console.log("No images detected, watching folder...");
             break;
         case 1:
-            console.log("Only one image detected, skipping shuffle...");
+            console.log("Only one image detected, skipping shuffle");
             queue = images;
             break;
         default:
-            console.log(`Shuffling ${images.length} images...`);
+            console.log(`Shuffling ${images.length} images`);
             queue = shuffle(images);
             break;
     }
 
     let i = 0; // current file index
+    console.log("\nStarting loop\n");
 
     immediateInterval(async () => {
         if (queue[i]) await setWallpaper(queue[i]);
@@ -76,7 +76,7 @@ const main = async () => {
 
             i = 0;
         }
-    }, 1 * 60 * 1000); // 1 min
+    }, 10000); // 10 seconds
 };
 
 function getImages(path: string): string[] {
@@ -111,24 +111,13 @@ function swap(arr: string[]) {
     return arr;
 }
 
-function immediateInterval(
-    f: (...args: unknown[]) => void,
-    interval: number | undefined,
-) {
+function immediateInterval(f: (...args: unknown[]) => void, interval: number | undefined) {
     f();
-    return setInterval(f, interval);
+    return setTimeout(f, interval);
 }
 
 async function setWallpaper(fileName: string) {
-    const file = resolve(providedPath + "\\" + fileName);
 
-    if (!await exists(file)) return 1;
-
-    const process = Deno.run({
-        cmd: [binaryWp, file],
-    });
-
-    return (await process.status()).code;
 }
 
 /*
