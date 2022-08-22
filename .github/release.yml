@@ -1,0 +1,42 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# This workflow will install Deno then run Deno lint and test.
+# For more information see: https://github.com/denoland/setup-deno
+
+name: Deno
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-2022
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v3
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@004814556e37c54a2f6e31384c9e18e983317366
+        with:
+          deno-version: v1.24.x
+
+      - name: Run linter
+        run: deno lint
+
+      - name: Compile executable
+        run: deno compile -A --unstable --output ./ts.exe ./index.ts
+
+      - name: Clone to debug
+        run: copy ts.exe ts_debug.exe
+
+        # https://gist.github.com/i1u5/014a6cd34a1b71237b871282e6aebd64
+      - name: Switch subsystem
+        run: deno run -A https://gist.githubusercontent.com/i1u5/014a6cd34a1b71237b871282e6aebd64/raw/17e243a7ca14a115b197892ba83f7e740bdfae8e/subsystem.ts "./ts.exe"
