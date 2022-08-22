@@ -9,6 +9,8 @@ Two optional paramaters may be provided:
 - The interval of slideshow in seconds, defaults to `5`
 - The path to the folder with images, if no directory was provided, then it will default to `%USERPROFILE%\Pictures`
 
+In order to respect user preference, please note that the wallpapers will not persist so a simple logout and login (or restart) will reset the wallpaper back to the one set by the user.
+
 ## Picking an executable
 
 Each release will contain two executables, the default which is built using `/SUBSYSTEM:WINDOWS` making the program run in the background and show no console (this is what you usually need), and the

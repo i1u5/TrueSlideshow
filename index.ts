@@ -23,9 +23,6 @@ enum USER32 {
     // SystemParametersInfoW as uiAction
     SPI_GETDESKWALLPAPER = 0x0073,
     SPI_SETDESKWALLPAPER = 0x0014,
-    // SystemParametersInfoW as fWinIni
-    SPIF_UPDATEINIFILE = 0x0001,
-    SPIF_SENDCHANGE = 0x0002,
 }
 
 let queue: string[] = [];
@@ -73,7 +70,7 @@ async function setWallpaper(fileName: string) {
     const len = (file.length + 1) * 2;
     const pointer = getBufferPointer(file, len);
 
-    if (u32.symbols.SystemParametersInfoW(USER32.SPI_SETDESKWALLPAPER, len, pointer, USER32.SPIF_UPDATEINIFILE | USER32.SPIF_SENDCHANGE) === 0n) {
+    if (u32.symbols.SystemParametersInfoW(USER32.SPI_SETDESKWALLPAPER, len, pointer, null) === 0n) {
         u32.close();
         return false;
     }
