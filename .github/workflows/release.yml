@@ -1,13 +1,20 @@
-name: Deno
+name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      reltitle:
+        description: 'Title'     
+        required: true
+      tag:
+        description: 'Ref tag'
+        required: true
 
 permissions:
-  contents: read
+  contents: write
 
-jobs:
-  test:
+build:
+  compile:
     runs-on: windows-2022
 
     steps:
@@ -28,6 +35,16 @@ jobs:
       - name: Clone to debug
         run: copy ts.exe ts_debug.exe
 
-        # https://gist.github.com/i1u5/014a6cd34a1b71237b871282e6aebd64
+      # https://gist.github.com/i1u5/014a6cd34a1b71237b871282e6aebd64
       - name: Switch subsystem
         run: deno run -A https://gist.githubusercontent.com/i1u5/014a6cd34a1b71237b871282e6aebd64/raw/17e243a7ca14a115b197892ba83f7e740bdfae8e/subsystem.ts "./ts.exe"
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ github.event.inputs.reltitle }}
+          tag_name: ${{ github.event.inputs.tag }}
+          files: |
+            ts.exe
+            ts_debug.exe
+          generate_release_notes: true
