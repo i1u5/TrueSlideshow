@@ -62,7 +62,7 @@ async function setWallpaper(fileName: string) {
 
     const u32 = Deno.dlopen("user32.dll", {
         SystemParametersInfoW: {
-            parameters: ["u64", "u64", "pointer", "u64"],
+            parameters: ["u64", "u64", "pointer", "pointer"],
             result: "pointer",
         },
     });
