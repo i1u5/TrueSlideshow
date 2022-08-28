@@ -1,9 +1,23 @@
-// deno run -A --unstable ./index.ts 20 "X:/path-to-folder"
+// deno run -A --unstable ./index.ts -i 10 -p "X:/path-to-folder"
 
-import { resolve } from "https://deno.land/std@0.152.0/path/mod.ts";
+if(Deno.build.os !== "windows") {
+    console.log("Only currently supported OS is Windows.");
+    Deno.exit(1);
+}
 
-const providedInt = Deno.args[0] && parseInt(Deno.args[0], 10) > 0 ? parseInt(Deno.args[0], 10) : 5;
-const providedPath = Deno.args[1] ? resolve(Deno.args[1]) : Deno.env.get("USERPROFILE") ? resolve(Deno.env.get("USERPROFILE") + "\\Pictures") : null;
+import { resolve as resolvepath } from "https://deno.land/std@0.153.0/path/mod.ts";
+import { parse as flags } from "https://deno.land/std@0.153.0/flags/mod.ts";
+
+const args = flags(Deno.args);
+
+const commands: Record<string, string | null> = {
+    interval: args.i || args.interval || null,
+    source: args.s || args.source || null,
+    path: args.p || args.path || null,
+};
+
+const loopInterval = commands.interval && parseInt(commands.interval, 10) > 0 ? parseInt(commands.interval, 10) : 5;
+const workingDirectory = commands.path ? resolvepath(commands.path) : Deno.env.get("USERPROFILE") ? resolvepath(Deno.env.get("USERPROFILE") + "\\Pictures") : null;
 
 const supportedExtensions = [
     ".jpg",
@@ -56,7 +70,7 @@ function getBufferPointer(param: string, len: number) {
 }*/
 
 async function setWallpaper(fileName: string) {
-    const file = resolve(providedPath + "\\" + fileName);
+    const file = resolvepath(workingDirectory + "\\" + fileName);
 
     if (!await exists(file)) return false;
 
@@ -135,14 +149,13 @@ function swap(arr: string[]) {
 }
 
 // Runtime
-
 const main = async () => {
-    if (!providedPath || !(await exists(providedPath))) {
+    if (!workingDirectory || !(await exists(workingDirectory))) {
         console.log("Error, the provided directory seems to be invalid.");
         Deno.exit(1);
     }
 
-    let images = getImages(providedPath);
+    let images = getImages(workingDirectory);
 
     switch (images.length) {
         case 0:
@@ -167,7 +180,7 @@ const main = async () => {
         i++;
 
         if (i >= queue.length) {
-            images = getImages(providedPath);
+            images = getImages(workingDirectory);
 
             if (images.length > 1) {
                 let tmp = shuffle(images);
@@ -180,7 +193,7 @@ const main = async () => {
             i = 0;
         }
 
-        setTimeout(loop, providedInt * 1000);
+        setTimeout(loop, loopInterval * 1000);
     })();
 };
 
