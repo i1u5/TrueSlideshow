@@ -33,7 +33,7 @@ jobs:
         run: deno compile -A --unstable --output ./ts.exe ./index.ts
 
       - name: Clone to debug
-        run: copy ts.exe ts_debug.exe
+        run: copy ts.exe ts_console.exe
 
       # https://gist.github.com/i1u5/014a6cd34a1b71237b871282e6aebd64
       - name: Switch subsystem
@@ -46,5 +46,5 @@ jobs:
           tag_name: ${{ github.event.inputs.tag }}
           files: |
             ts.exe
-            ts_debug.exe
+            ts_console.exe
           generate_release_notes: true
